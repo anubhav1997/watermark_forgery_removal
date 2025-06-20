@@ -252,19 +252,4 @@ print(avg/float(total))
 print(total)
 
 
-# adv_noise = clean_img - clean_img_initial
-
-
-# clean_img2 = load_clean_img("/scratch/aj3281/french horn_no_guidance/Images/1.png")
-# clean_img2 = transform_img(clean_img2).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-# print("transferability p value initial", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-# clean_img2 = dct.idct(dct.dct(clean_img2) + adv_noise)
-
-# save_img(clean_img2, "adv_transfer.png")
-
-# print("transferability p value", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-
 

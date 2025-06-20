@@ -73,7 +73,7 @@ def parse_args():
         default=42,
     )
     parser.add_argument(
-        "--eps",
+        "--lamda",
         type=float,
         default=2,
     )
@@ -234,15 +234,15 @@ while i < args.end_iter:
     # clean_image_latents = pipe.vae.encode(clean_img).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025
     
     n_iters = args.n_iters #1000
-    eps=args.eps
+    lamda=args.lamda
     alpha=args.alpha#5/255
     
     loss_function = torch.nn.MSELoss()
     
     if vae_optimization is not None:
-        clean_img, adv_noise = pgd_attack2(clean_img, generated_image, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        clean_img, adv_noise = pgd_attack_lamda(clean_img, generated_image, vae_optimization, lamda=lamda, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     else:
-        clean_img, adv_noise = pgd_attack2(clean_img, generated_image, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        clean_img, adv_noise = pgd_attack_lamda(clean_img, generated_image, vae, lamda=lamda, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     # torchvision.utils.save_image(clean_img, 'adv_img.jpg')
     final_p = watermark.eval_watermark(get_reversed_w(pipe, clean_img))
     print("final p value", final_p)

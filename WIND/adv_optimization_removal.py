@@ -219,9 +219,9 @@ while i < args.end_iter:
     loss_function = torch.nn.MSELoss()
     
     if vae_optimization is not None:
-        generated_image_new, adv_noise = pgd_attack2(generated_image, clean_img, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        generated_image_new, adv_noise = pgd_attack_lamda(generated_image, clean_img, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     else:
-        generated_image_new, adv_noise = pgd_attack2(generated_image, clean_img, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        generated_image_new, adv_noise = pgd_attack_lamda(generated_image, clean_img, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     # torchvision.utils.save_image(clean_img, 'adv_img.jpg')
     final_p = detect(generated_image_new, pipe, w_key, w_mask, img_size=img_size)
     print("final p value", final_p)
@@ -240,21 +240,5 @@ while i < args.end_iter:
 print(asr/float(total))
 print(avg/float(total))
 print(total)
-
-
-# adv_noise = clean_img - clean_img_initial
-
-
-# clean_img2 = load_clean_img("/scratch/aj3281/french horn_no_guidance/Images/1.png")
-# clean_img2 = transform_img(clean_img2).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-# print("transferability p value initial", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-# clean_img2 = dct.idct(dct.dct(clean_img2) + adv_noise)
-
-# save_img(clean_img2, "adv_transfer.png")
-
-# print("transferability p value", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
 
 

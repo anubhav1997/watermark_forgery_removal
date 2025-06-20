@@ -66,7 +66,7 @@ def parse_args():
         default=42,
     )
     parser.add_argument(
-        "--eps",
+        "--lamda",
         type=float,
         default=2,
     )
@@ -215,15 +215,15 @@ while i < args.end_iter:
     # print(torch.max(clean_img), torch.min(clean_img))
     
     n_iters = args.n_iters #1000
-    eps=args.eps
+    lamda=args.lamda
     alpha=args.alpha#5/255
     
     loss_function = torch.nn.MSELoss()
     
     if vae_optimization is not None:
-        clean_img = pgd_attack2(clean_img, generated_image, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        clean_img = pgd_attack_lamda(clean_img, generated_image, vae_optimization, lamda=lamda, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     else:
-        clean_img = pgd_attack2(clean_img, generated_image, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        clean_img = pgd_attack_lamda(clean_img, generated_image, vae, lamda=lamda, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     # torchvision.utils.save_image(clean_img, 'adv_img.jpg')
     final_p = detect(clean_img, pipe, w_key, w_mask, img_size=img_size)
     print("final p value", final_p)
@@ -242,21 +242,5 @@ while i < args.end_iter:
 print(asr/float(total))
 print(avg/float(total))
 print(total)
-
-
-# adv_noise = clean_img - clean_img_initial
-
-
-# clean_img2 = load_clean_img("/scratch/aj3281/french horn_no_guidance/Images/1.png")
-# clean_img2 = transform_img(clean_img2).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-# print("transferability p value initial", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-# clean_img2 = dct.idct(dct.dct(clean_img2) + adv_noise)
-
-# save_img(clean_img2, "adv_transfer.png")
-
-# print("transferability p value", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
 
 

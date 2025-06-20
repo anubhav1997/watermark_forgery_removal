@@ -212,9 +212,9 @@ while i < args.end_iter:
     loss_function = torch.nn.MSELoss()
     
     if vae_optimization is not None:
-        generated_image_new, adv_noise = pgd_attack2(generated_image, clean_img, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        generated_image_new, adv_noise = pgd_attack_lamda(generated_image, clean_img, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     else:
-        generated_image_new, adv_noise = pgd_attack2(generated_image, clean_img, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        generated_image_new, adv_noise = pgd_attack_lamda(generated_image, clean_img, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     # torchvision.utils.save_image(clean_img, 'adv_img.jpg')
     final_p = detect(generated_image_new, pipe, w_key, w_mask, img_size=img_size)
     print("final p value", final_p)

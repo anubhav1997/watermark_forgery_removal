@@ -210,7 +210,7 @@ def load_clean_img(filename):
 
 
 
-def pgd_attack_fft_clip(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
+def pgd_attack_fft_clip(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
   
     vae.requires_grad = False 
 
@@ -262,7 +262,7 @@ def pgd_attack_fft_clip(clean_img, generated_image, vae, eps=0.03, alpha=0.0001,
         grad = -1*torch.autograd.grad(loss, data)[0]
         
         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-eps, max=eps)
+        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-lamda, max=lamda)
         # data = torch.clamp(clean_img_fft + eta, min=-1, max=1).detach_()
         data = torch.clamp(clean_img_fft + eta, min=-100000, max=100000).detach_()
 
@@ -272,7 +272,7 @@ def pgd_attack_fft_clip(clean_img, generated_image, vae, eps=0.03, alpha=0.0001,
 
 
 
-def pgd_attack_fft(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=0, wave='haar'):
+def pgd_attack_fft(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=0, wave='haar'):
   
     vae.requires_grad = False 
 
@@ -308,7 +308,7 @@ def pgd_attack_fft(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iter
         grad = -1*torch.autograd.grad(loss, data)[0]
         
         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-eps, max=eps)
+        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-lamda, max=lamda)
         # data = torch.clamp(clean_img_fft + eta, min=-1, max=1).detach_()
         data = torch.clamp(clean_img_fft + eta, min=-100000, max=100000).detach_()
 
@@ -320,7 +320,7 @@ def pgd_attack_fft(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iter
 
 
 
-def pgd_attack_fft_multi(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=0, wave='haar'):
+def pgd_attack_fft_multi(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=0, wave='haar'):
   
     vae.requires_grad = False 
 
@@ -363,7 +363,7 @@ def pgd_attack_fft_multi(clean_img, generated_image, vae, eps=0.03, alpha=0.0001
         grad = -1*torch.autograd.grad(loss, data)[0]
         
         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-eps, max=eps)
+        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-lamda, max=lamda)
         # data = torch.clamp(clean_img_fft + eta, min=-1, max=1).detach_()
         data = torch.clamp(clean_img_fft + eta, min=-100000, max=100000).detach_()
 
@@ -372,7 +372,7 @@ def pgd_attack_fft_multi(clean_img, generated_image, vae, eps=0.03, alpha=0.0001
 
 
 
-def pgd_attack(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
+def pgd_attack(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
     
     vae.requires_grad = False 
     data = Variable(clean_img.data, requires_grad=True).to(device)
@@ -407,13 +407,13 @@ def pgd_attack(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10
         grad = -1*torch.autograd.grad(loss, data)[0]
 
         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-        eta = torch.clamp(adv_images - clean_img, min=-eps, max=eps)
+        eta = torch.clamp(adv_images - clean_img, min=-lamda, max=lamda)
         data = torch.clamp(clean_img + eta, min=-1, max=1).detach_()
             
     return data
 
 
-def pgd_attack2(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
+def pgd_attack_lamda(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
     
     vae.requires_grad = False 
     data = Variable(clean_img.data, requires_grad=True).to(device)
@@ -435,7 +435,7 @@ def pgd_attack2(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=1
         data.requires_grad = True 
         outputs = vae.encode(data).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025  #model(images)
         outputs.retain_grad()
-        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + eps * torch.nn.functional.mse_loss(data, clean_img)
+        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + lamda * torch.nn.functional.mse_loss(data, clean_img)
         if delta>0:
                 
             adv_ll = dwt(data.float())
@@ -448,13 +448,13 @@ def pgd_attack2(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=1
         grad = -1*torch.autograd.grad(loss, data)[0]
 
         data = data + alpha*grad #data.grad.sign()
-        # eta = torch.clamp(adv_images - clean_img, min=-eps, max=eps)
+        # eta = torch.clamp(adv_images - clean_img, min=-lamda, max=lamda)
         data = torch.clamp(data, min=-1, max=1).detach_()
             
     return data
 
 import lpips
-def pgd_attack_lpips(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
+def pgd_attack_lpips(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
     
     vae.requires_grad = False 
     data = Variable(clean_img.data, requires_grad=True).to(device)
@@ -478,7 +478,7 @@ def pgd_attack_lpips(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, it
         data.requires_grad = True 
         outputs = vae.encode(data).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025  #model(images)
         outputs.retain_grad()
-        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + eps * loss_fn_alex(data, clean_img)
+        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + lamda * loss_fn_alex(data, clean_img)
         if delta>0:
                 
             adv_ll = dwt(data.float())
@@ -491,14 +491,14 @@ def pgd_attack_lpips(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, it
         grad = -1*torch.autograd.grad(loss, data)[0]
 
         data = data + alpha*grad #data.grad.sign()
-        # eta = torch.clamp(adv_images - clean_img, min=-eps, max=eps)
+        # eta = torch.clamp(adv_images - clean_img, min=-lamda, max=lamda)
         data = torch.clamp(data, min=-1, max=1).detach_()
             
     return data
 
 
 
-def pgd_attack3(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
+def pgd_attack3(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
     
     vae.requires_grad = False 
     data = Variable(clean_img.data, requires_grad=True).to(device)
@@ -520,7 +520,7 @@ def pgd_attack3(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=1
         data.requires_grad = True 
         outputs = vae.encode(data).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025  #model(images)
         outputs.retain_grad()
-        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + eps * torch.nn.functional.mse_loss(data, clean_img)
+        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + lamda * torch.nn.functional.mse_loss(data, clean_img)
         if delta>0:
                 
             adv_ll = dwt(data.float())
@@ -533,7 +533,7 @@ def pgd_attack3(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=1
         grad = -1*torch.autograd.grad(loss, data)[0]
 
         data = data + alpha*torch.sign(grad) #data.grad.sign()
-        # eta = torch.clamp(adv_images - clean_img, min=-eps, max=eps)
+        # eta = torch.clamp(adv_images - clean_img, min=-lamda, max=lamda)
         data = torch.clamp(data, min=-1, max=1).detach_()
             
     return data
@@ -569,7 +569,7 @@ def get_mask(generated_image_fft, cutoff):
 
 
 
-def pgd_attack_fft_closest(generated_image, clean_image_paths, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
+def pgd_attack_fft_closest(generated_image, clean_image_paths, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
   
     vae.requires_grad = False 
 
@@ -621,7 +621,7 @@ def pgd_attack_fft_closest(generated_image, clean_image_paths, vae, eps=0.03, al
         grad = -1*torch.autograd.grad(loss, data)[0]
         
         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-        eta = mask*torch.clamp(adv_images - generated_image_fft, min=-eps, max=eps)
+        eta = mask*torch.clamp(adv_images - generated_image_fft, min=-lamda, max=lamda)
         data = torch.clamp(generated_image_fft + eta, min=-100000, max=100000).detach_()
 
     return torch.clamp(dct.idct(data), min=-1, max=1), eta #torch.fft.ifft2(torch.complex(data, clean_img_fft_imag)).real
@@ -629,7 +629,7 @@ def pgd_attack_fft_closest(generated_image, clean_image_paths, vae, eps=0.03, al
 
 
 
-def pgd_attack_fft_closest_lambda_l2(generated_image, clean_image_paths, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
+def pgd_attack_fft_closest_lambda_l2(generated_image, clean_image_paths, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
   
     vae.requires_grad = False 
 
@@ -674,20 +674,20 @@ def pgd_attack_fft_closest_lambda_l2(generated_image, clean_image_paths, vae, ep
         data.requires_grad = True 
         outputs = vae.encode(data).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025  #model(images)
         outputs.retain_grad()
-        loss = torch.nn.functional.mse_loss(outputs, clean_image_latents) + eps * torch.nn.functional.mse_loss(data, generated_image)
+        loss = torch.nn.functional.mse_loss(outputs, clean_image_latents) + lamda * torch.nn.functional.mse_loss(data, generated_image)
 
         
         grad = -1*torch.autograd.grad(loss, data)[0]
 
         data = data + alpha*grad #data.grad.sign()
-        # eta = torch.clamp(adv_images - generated_image, min=-eps, max=eps)
+        # eta = torch.clamp(adv_images - generated_image, min=-lamda, max=lamda)
         data = torch.clamp(data, min=-1, max=1).detach_()
 
     return data, None
 
 
 
-# def pgd_attack_fft_removal(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
+# def pgd_attack_fft_removal(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
   
 #     vae.requires_grad = False 
 
@@ -736,7 +736,7 @@ def pgd_attack_fft_closest_lambda_l2(generated_image, clean_image_paths, vae, ep
 #         grad = torch.autograd.grad(loss, data)[0]
         
 #         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-#         eta = mask*torch.clamp(adv_images - clean_img_fft, min=-eps, max=eps)
+#         eta = mask*torch.clamp(adv_images - clean_img_fft, min=-lamda, max=lamda)
 #         # data = torch.clamp(clean_img_fft + eta, min=-1, max=1).detach_()
 #         data = torch.clamp(clean_img_fft + eta, min=-100000, max=100000).detach_()
 

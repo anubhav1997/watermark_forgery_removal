@@ -184,7 +184,7 @@ def detect(Fourier_watermark_image_distorted, pipe, Fourier_watermark_pattern, w
 
 
 
-def pgd_attack_fft(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
+def pgd_attack_fft(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, cutoff=100, delta=1, wave='haar'):
   
     vae.requires_grad = False 
 
@@ -232,7 +232,7 @@ def pgd_attack_fft(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iter
         grad = -1*torch.autograd.grad(loss, data)[0]
         
         adv_images = data + alpha*torch.sign(grad) #data.grad.sign()
-        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-eps, max=eps)
+        eta = mask*torch.clamp(adv_images - clean_img_fft, min=-lamda, max=lamda)
         # data = torch.clamp(clean_img_fft + eta, min=-1, max=1).detach_()
         data = torch.clamp(clean_img_fft + eta, min=-100000, max=100000).detach_()
 
@@ -384,7 +384,7 @@ class WatermarkClass:
 
 
 
-def pgd_attack2(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
+def pgd_attack_lamda(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
     
     vae.requires_grad = False 
     data = Variable(clean_img.data, requires_grad=True).to(device)
@@ -406,7 +406,7 @@ def pgd_attack2(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=1
         data.requires_grad = True 
         outputs = vae.encode(data).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025  #model(images)
         outputs.retain_grad()
-        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + eps * torch.nn.functional.mse_loss(data, clean_img)
+        loss = torch.nn.functional.mse_loss(outputs, generated_image_latents) + lamda * torch.nn.functional.mse_loss(data, clean_img)
         if delta>0:
                 
             adv_ll = dwt(data.float())
@@ -419,7 +419,7 @@ def pgd_attack2(clean_img, generated_image, vae, eps=0.03, alpha=0.0001, iters=1
         grad = -1*torch.autograd.grad(loss, data)[0]
 
         data = data + alpha*grad #data.grad.sign()
-        # eta = torch.clamp(adv_images - clean_img, min=-eps, max=eps)
+        # eta = torch.clamp(adv_images - clean_img, min=-lamda, max=lamda)
         data = torch.clamp(data, min=-1, max=1).detach_()
             
     return data, clean_img - data
