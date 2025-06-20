@@ -21,6 +21,7 @@ import glob
 import random 
 # import pandas as pd
 import argparse
+from my_utils import * 
 
 def parse_args():
     
@@ -131,6 +132,7 @@ elif model_id == "black-forest-labs/FLUX.1-dev":
     pipe = FluxPipeline.from_pretrained(model_id, vae=vae, transformer=transformer, torch_dtype=torch.float16)
     shape = (1, pipe.transformer.in_channels, img_size//8, img_size//8)
 
+
 pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
 # pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
 pipe = pipe.to("cuda")
@@ -138,7 +140,7 @@ pipe = pipe.to("cuda")
 if not os.path.exists(args.outdir):
     os.makedirs(args.outdir)
 
-
+# shape = (1, 4, img_size//8, img_size//8)
 w_channel = 0
 w_radius = 16 # the suggested r from section 4.4 of paper
 
@@ -146,10 +148,10 @@ files = sorted(glob.glob('/scratch/aj3281/watermarking_project/tree-ring-waterma
 # prompts = load_dataset("Gustavosta/Stable-Diffusion-Prompts")["test"]
 
 
-# splits = {'train': 'data/train.parquet', 'test': 'data/eval.parquet'}
-# prompts = pd.read_parquet("hf://datasets/Gustavosta/Stable-Diffusion-Prompts/" + splits["test"]).to_numpy()
+splits = {'train': 'data/train.parquet', 'test': 'data/eval.parquet'}
+prompts = pd.read_parquet("hf://datasets/Gustavosta/Stable-Diffusion-Prompts/" + splits["test"]).to_numpy()
 
-prompts = pd.read_parquet("hf://datasets/yuvalkirstain/runwayml-stable-diffusion-v1-5-eval-random-prompts/data/train-00000-of-00001-e6b6f8777640f9fc.parquet")['prompt'].to_numpy()
+# prompts = pd.read_parquet("hf://datasets/yuvalkirstain/runwayml-stable-diffusion-v1-5-eval-random-prompts/data/train-00000-of-00001-e6b6f8777640f9fc.parquet")['prompt'].to_numpy()
 
 
 # prompts = pd.read_csv("/scratch/aj3281/concept_erasure_project/Diffusion-MU-Attack/prompts/coco_10k.csv")
@@ -175,44 +177,33 @@ while i < args.end_iter:
 
     
     # get w_key and w_mask
-    np_mask = circle_mask(shape[-1], r=w_radius)
-    torch_mask = torch.tensor(np_mask).to(pipe.device)
-    w_mask = torch.zeros(shape, dtype=torch.bool).to(pipe.device)
-    w_mask[:, w_channel] = torch_mask
-    w_key = get_pattern(shape, pipe, w_seed=w_seed, img_size=img_size).to(pipe.device)
-        
-    # optimize for speed
-    # pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
-    
-    # generated_image = generate(str(prompts[prompts['case_number']==int(files[i].split('/')[-1].split('.')[0])]["prompt"].to_numpy()[0]), pipe, w_key, w_mask, img_size=img_size)
-    generated_image = generate(prompts[i][0], pipe, w_key, w_mask, img_size=img_size)
+    # np_mask = circle_mask(shape[-1], r=w_radius)
+    # torch_mask = torch.tensor(np_mask).to(pipe.device)
+    # w_mask = torch.zeros(shape, dtype=torch.bool).to(pipe.device)
+    # w_mask[:, w_channel] = torch_mask
+    # w_key = get_pattern(shape, pipe, w_seed=w_seed, img_size=img_size).to(pipe.device)
+
+    watermarker = get_pattern(pipe, shape=shape, w_seed=w_seed, img_size=img_size)
+    generated_image, _, _, _, w_key, w_mask = watermarker.encode_and_generate(pipe, prompts[i][0], iteration=None)
     gen_img_score = detect(generated_image, pipe, w_key, w_mask, img_size=img_size)
+
+    # print()
     if gen_img_score > 0.05:
         print("IGNORED")
         i+=1 
         continue 
         
-    # print("p value for generated image", )
+    print("p value for generated image", gen_img_score)
     
-    clean_img = load_clean_img(file)
-    generated_image = transform_img(generated_image).unsqueeze(0).to(pipe.vae.dtype).to(pipe.device)
-    
-    # save_img(generated_image, 'gen_img2.png')    
-    # print(prompts[i], gen_img_score)
+    generated_image = transform_img(generated_image).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
 
-    clean_img = transform_img(clean_img).unsqueeze(0).to(pipe.vae.dtype).to(pipe.device)
-    
-    if clean_img.shape[1] !=3:
-        i+=1
-        continue 
-        
+    clean_img = torch.ones_like(generated_image).to(pipe.unet.dtype).to(pipe.device)*torch.mean(generated_image)#*-1
     clean_img_initial = clean_img.detach() 
     # save_img(clean_img, "org_img2.png")
 
     init_p_val = detect(clean_img, pipe, w_key, w_mask, img_size=img_size)
     print("initial p value", init_p_val)
     # clean_image_latents = pipe.vae.encode(clean_img).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025
-    # print(torch.max(clean_img), torch.min(clean_img))
     
     n_iters = args.n_iters #1000
     eps=args.eps
@@ -221,15 +212,15 @@ while i < args.end_iter:
     loss_function = torch.nn.MSELoss()
     
     if vae_optimization is not None:
-        clean_img = pgd_attack2(clean_img, generated_image, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        generated_image_new, adv_noise = pgd_attack2(generated_image, clean_img, vae_optimization, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     else:
-        clean_img = pgd_attack2(clean_img, generated_image, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
+        generated_image_new, adv_noise = pgd_attack2(generated_image, clean_img, vae, eps=eps, alpha=alpha, iters=n_iters, cutoff=args.cutoff, delta=args.delta)
     # torchvision.utils.save_image(clean_img, 'adv_img.jpg')
-    final_p = detect(clean_img, pipe, w_key, w_mask, img_size=img_size)
+    final_p = detect(generated_image_new, pipe, w_key, w_mask, img_size=img_size)
     print("final p value", final_p)
-    save_img(clean_img, f"{args.outdir}/{i}_{gen_img_score}_{init_p_val}_{final_p}.png")
+    save_img(generated_image_new, f"{args.outdir}/{i}_{gen_img_score}_{init_p_val}_{final_p}.png")
 
-    asr += int(final_p <= 0.05)
+    asr += int(final_p >= 0.05)
     avg += final_p
     total+=1 
     
@@ -242,21 +233,4 @@ while i < args.end_iter:
 print(asr/float(total))
 print(avg/float(total))
 print(total)
-
-
-# adv_noise = clean_img - clean_img_initial
-
-
-# clean_img2 = load_clean_img("/scratch/aj3281/french horn_no_guidance/Images/1.png")
-# clean_img2 = transform_img(clean_img2).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-# print("transferability p value initial", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-# clean_img2 = dct.idct(dct.dct(clean_img2) + adv_noise)
-
-# save_img(clean_img2, "adv_transfer.png")
-
-# print("transferability p value", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-
 

@@ -195,23 +195,7 @@ while i < args.end_iter:
         
     print("p value for generated image", gen_img_score)
     
-    
     generated_image = transform_img(generated_image).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-    # ### comment out later ###
-    # save_img(generated_image, f"generated_images/sd2/{i}.png")
-    # i+=1
-    # continue 
-    # ####
-    
-    # clean_img = load_clean_img(file)  
-    # clean_img = transform_img(clean_img).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-    # # print(clean_img.shape, clean_img.shape[1])
-    
-    # if clean_img.shape[1] !=3:
-    #     i+=1
-    #     continue 
 
     clean_img = torch.ones_like(generated_image).to(pipe.unet.dtype).to(pipe.device)*torch.mean(generated_image)#*-1
     clean_img_initial = clean_img.detach() 
@@ -220,7 +204,6 @@ while i < args.end_iter:
     init_p_val = detect(clean_img, pipe, w_key, w_mask, img_size=img_size)
     print("initial p value", init_p_val)
     # clean_image_latents = pipe.vae.encode(clean_img).latent_dist.mode() * (1./vae.config.scaling_factor) #0.13025
-    # print(torch.max(clean_img), torch.min(clean_img))
     
     n_iters = args.n_iters #1000
     eps=args.eps
@@ -250,21 +233,4 @@ while i < args.end_iter:
 print(asr/float(total))
 print(avg/float(total))
 print(total)
-
-
-# adv_noise = clean_img - clean_img_initial
-
-
-# clean_img2 = load_clean_img("/scratch/aj3281/french horn_no_guidance/Images/1.png")
-# clean_img2 = transform_img(clean_img2).unsqueeze(0).to(pipe.unet.dtype).to(pipe.device)
-
-# print("transferability p value initial", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-# clean_img2 = dct.idct(dct.dct(clean_img2) + adv_noise)
-
-# save_img(clean_img2, "adv_transfer.png")
-
-# print("transferability p value", detect(clean_img2, pipe, w_key, w_mask, img_size=img_size))
-
-
 
