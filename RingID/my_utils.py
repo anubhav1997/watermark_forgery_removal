@@ -468,7 +468,7 @@ def save_img(clean_img, out_path):
 
 
 
-def pgd_attack2(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
+def pgd_attack_lamda(clean_img, generated_image, vae, lamda=0.03, alpha=0.0001, iters=10, delta=0, wave='haar', **kwargs):
     
     vae.requires_grad = False 
     data = Variable(clean_img.data, requires_grad=True).to(device)
