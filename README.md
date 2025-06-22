@@ -14,16 +14,16 @@ We specifically focus on the following latent-noise based watermarking schemes -
 
 ## Running Attacks on Tree-Ring Watermarking Scheme
 
-To run the forgery attack on SDv2.1 using the VAE from SDv1.4 use the following script. To update the VAE utilized for optimization you can update this in the parameter ```--vae_optimization```. You can update the model you want to attack using the parameter ```--pretrained_model_name_or_path```. We also utilize a hyper-parameter lambda in our optimization this can be controlled using the parameter ```--eps```. 
+To run the forgery attack on SDv2.1 using the VAE from SDv1.4 use the following script. To update the VAE utilized for optimization you can update this in the parameter ```--vae_optimization```. You can update the model you want to attack using the parameter ```--pretrained_model_name_or_path```. We also utilize a hyper-parameter lambda in our optimization this can be controlled using the parameter ```--lamda```. 
 
 ```
-python3 Tree-Ring/forgery.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 Tree-Ring/forgery.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 Similarly you can run the removal attack using the following command: 
 
 ```
-python3 Tree-Ring/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 Tree-Ring/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 
@@ -32,13 +32,13 @@ python3 Tree-Ring/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pretraine
 To run the forgery attack on the Gaussian Shading watermarking scheme, use the following command: 
 
 ```
-python3 Gaussian-Shading/forgery.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 Gaussian-Shading/forgery.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 Similarly you can run the removal attack using the following command: 
 
 ```
-python3 Gaussian-Shading/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 Gaussian-Shading/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 
@@ -48,13 +48,13 @@ python3 Gaussian-Shading/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pr
 To run the forgery attack on the RingID watermarking scheme, use the following command: 
 
 ```
-python3 Gaussian-Shading/forgery.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 Gaussian-Shading/forgery.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 Similarly you can run the removal attack using the following command: 
 
 ```
-python3 Gaussian-Shading/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 Gaussian-Shading/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 
@@ -65,12 +65,12 @@ python3 Gaussian-Shading/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pr
 To run the forgery attack on the WIND watermarking scheme, use the following command: 
 
 ```
-python3 WIND/forgery.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 WIND/forgery.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 Similarly you can run the removal attack using the following command: 
 
 ```
-python3 WIND/removal.py --eps 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 WIND/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
