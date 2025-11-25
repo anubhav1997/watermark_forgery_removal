@@ -48,13 +48,13 @@ python3 Gaussian-Shading/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --
 To run the forgery attack on the RingID watermarking scheme, use the following command: 
 
 ```
-python3 Gaussian-Shading/forgery.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 RingID/forgery.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 Similarly you can run the removal attack using the following command: 
 
 ```
-python3 Gaussian-Shading/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
+python3 RingID/removal.py --lamda 1e4 --start_iter 0 --end_iter 200 --pretrained_model_name_or_path "stabilityai/stable-diffusion-2-base" --vae_optimization "CompVis/stable-diffusion-v1-4" --outdir forged_images
 ```
 
 
